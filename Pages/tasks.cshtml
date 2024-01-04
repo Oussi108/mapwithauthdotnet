@@ -1,0 +1,131 @@
+﻿@page
+@model Taskmangaer.Pages.tasksModel
+@{
+}
+<h1>User Tasks</h1>
+<a asp-page="/addtask" class="btn btn-primary btn-lg">Add Task</a>
+@if (Model.UserTasks.Any())
+{
+    <div>
+        
+
+
+
+        <p>Colors :</p>
+        <ul>
+            <li><span class="badge badge-danger">Red:</span> Due in less than 3 days</li>
+            <li><span class="badge badge-warning">Yellow:</span> Due in 3-7 days</li>
+            <li><span class="badge badge-success">Green:</span> Due in more than 7 days</li>
+        </ul>
+    </div>
+    <form method="post" class="my-3">
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label for="titleFilter" class="form-label">Title</label>
+                <input asp-for="TitleFilter" class="form-control" id="titleFilter" />
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="priorityFilter" class="form-label">Priority</label>
+                <select asp-for="PriorityFilter" class="form-select" id="priorityFilter">
+                    <option value="">-- Select Priority --</option>
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="categoryFilter" class="form-label">Category</label>
+                <input asp-for="CategoryFilter" class="form-control" id="categoryFilter" />
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="statusFilter" class="form-label">Status</label>
+                <select asp-for="StatusFilter" class="form-select" id="statusFilter">
+                    <option value="">-- Select Status --</option>
+                    <option value="TODO">To Do</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="DONE">Done</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+
+
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Due Date</th>
+                <th>Priority</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var task in Model.UserTasks)
+            {
+                // Calculate days until the due date
+                var daysUntilDue = (task.DueDate - DateTime.Today).Days;
+
+                // Apply conditional class based on the number of days until the due date
+                string rowClass = daysUntilDue < 3 ? "table-danger" :
+                daysUntilDue < 7 ? "table-warning" : "table-success";
+
+                <tr class="@rowClass">
+                    <td>@task.Title</td>
+                    <td>@task.Description</td>
+                    <td>@task.DueDate.ToShortDateString()</td>
+                    <td>@task.TaskPriority</td>
+                    <td>@task.Category</td>
+                    <td>@task.TaskStatus</td>
+                    <td>
+                        <a asp-page="./EditTask" asp-route-id="@task.Id" class="btn btn-primary btn-sm">Edit</a>
+                        <form method="post" asp-page-handler="DeleteTask" asp-route-id="@task.Id" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Add a div for the calendar -->
+    <div id="calendar"></div>
+
+    @section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar/core/main.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar/core/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar/daygrid/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                plugins: ['dayGrid'],
+                defaultView: 'dayGridMonth',
+                events: [
+        @foreach (var task in Model.UserTasks)
+            {
+                <text>{
+                                title: '@task.Title',
+                                start: '@task.DueDate.ToString("yyyy-MM-dd")'
+                            }, </text>
+            }
+                            ]
+                });
+
+                calendar.render();
+            });
+        </script>
+}
+
+
+}
+else
+{
+    <p>No tasks found for this user.</p>
+}
+
+
